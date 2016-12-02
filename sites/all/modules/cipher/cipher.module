@@ -76,40 +76,40 @@ function encrypt_form_submit($form, &$form_state) {
 
     foreach($phrase_chars as $char) {
         $char_code = ord($char);
-        // if character is an uppercase letter
+        // define upper and lower ascii bounds based on whether a character is uppercase or lowercase
+        // if character is neither, add to the encrypted array and continue to the next iteration of the foreach loop
+        $code_min;
+        $code_max;
         if ($char_code >= 65 && $char_code <= 90) {
-            $new_code;
-            // adjust character code left or right
-            if ($direction == 'left') {
-                $new_code = $char_code - $modded_value;
-            } else {
-                $new_code = $char_code + $modded_value;
-            }
-            // correct for overadjustments
-            if ($new_code > 90) {
-                $new_code = 64 + ($new_code - 90);
-            } elseif ($new_code < 65) {
-                $new_code = 91 - (65 - $new_code);
-            }
-            // add the new character to the array
-            $encrypted_chars[] = chr($new_code);
+            $code_min = 65;
+            $code_max = 90;
         } elseif ($char_code >= 97 && $char_code <= 122) {
-            // character is a lowercase letter
-            $encrypted_chars[] = chr($char_code + $modded_value);
+            $code_min = 97;
+            $code_max = 122;
         } else {
-            $encrypted_chars[] = chr($char_code);
+            $encrypted_chars[] = $char;
+            continue;
         }
+        // adjust character code left or right
+        $new_code;
+        if ($direction == 'left') {
+            $new_code = $char_code - $modded_value;
+        } else {
+            $new_code = $char_code + $modded_value;
+        }
+        // correct for overadjustments
+        if ($new_code > $code_max) {
+            $new_code = ($code_min - 1) + ($new_code - $code_max);
+        } elseif ($new_code < $code_min) {
+            $new_code = ($code_max + 1) - ($code_min - $new_code);
+        }
+        // add the new character to the array
+        $encrypted_chars[] = chr($new_code);
     }
-
-    echo "<pre>";
-    echo "$phrase <br>";
-    echo implode($encrypted_chars);
-    echo "</pre>";
-    exit;
-
     $_SESSION['value'] = $form_state['values']['value'];
     $_SESSION['direction'] = $form_state['values']['direction'];
     $_SESSION['phrase'] = $form_state['values']['phrase'];
+    $_SESSION['encrypted phrase'] = implode($encrypted_chars);
     $form_state['redirect'] = 'encrypt_success';
 }
 
@@ -117,5 +117,6 @@ function encrypt_success() {
     $value = $_SESSION['value'];
     $direction = $_SESSION['direction'];
     $phrase = $_SESSION['phrase'];
-    return "Value: $value <br>Direction: $direction <br>Phrase: $phrase";
+    $encrypted_phrase = $_SESSION['encrypted phrase'];
+    return "Encrypted Phrase: $encrypted_phrase <br>Value: $value <br>Direction: $direction <br>Phrase: $phrase";
 }
