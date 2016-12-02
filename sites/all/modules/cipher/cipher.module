@@ -68,7 +68,6 @@ function encrypt_form() {
     return $form;
 }
 
-
 function encrypt_form_submit($form, &$form_state) {
     // if there is no shift value, get one randomly
     $value = $form_state['values']['value'];
@@ -136,12 +135,12 @@ function encrypt_success() {
 function encrypt_phrase($value, $direction, $phrase) {
     $encrypted_chars = array();
     $phrase_chars = str_split($phrase);
-    // if it loops through the alphabet more than once, cut off the extra
+    // if shift loops through the alphabet more than once, cut off the extra
     $modded_value = $value % 26;
     // foreach adjusts characters individually
     foreach($phrase_chars as $char) {
         $char_code = ord($char);
-        // define upper and lower ascii bounds based on whether a character is uppercase or lowercase
+        // define min and max ascii bounds based on whether a character is uppercase or lowercase
         // if character is not a letter, add to the encrypted array and continue to the next iteration of the foreach loop
         $code_min;
         $code_max;
