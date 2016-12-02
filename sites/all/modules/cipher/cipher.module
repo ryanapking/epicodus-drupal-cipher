@@ -1,4 +1,5 @@
 <?php
+
 function cipher_menu() {
     $items = array();
     $items['encrypt'] = array(
@@ -23,62 +24,76 @@ function cipher_menu() {
     return $items;
 }
 
-function decrypt() {
-    $value = $_SESSION['value'];
-    $direction = $_SESSION['direction'];
-    $phrase = $_SESSION['phrase'];
-    $encrypted_phrase = $_SESSION['encrypted phrase'];
-    $decrypt_button = drupal_get_form('decrypt_button_form');
-    return "
-        <p>Original Phrase: $phrase</p>
-        <p>Shift Value: $value</p>
-        <p>Shift Direction: $direction</p>
-        <p>Encrypted Phrase: $encrypted_phrase</p>
-    ";
+// form and form_submit hooks
+function decrypt_button_form() {
+    $form = array();
+    $form['submit'] = array(
+        '#type' => 'submit',
+        '#value' => 'Decrypt This Phrase',
+    );
+    return $form;
 }
 
-function cipher_node_info() {
-    $nodes = array();
-    $nodes['encrypted_phrase'] = array(
-            'name' => 'Encrypted Phrase',
-            'base' => 'encrypted_phrase',
-            'description' => 'A phrase that has been encrypted',
-            'has_title' => TRUE,
-            'title_label' => t('Phrase Title'),
-        );
-    return $nodes;
+function decrypt_button_form_submit($form, &$form_state) {
+    $form_state['redirect'] = 'decrypt';
 }
 
 function encrypt_form() {
     $form = array();
     $form['value'] = array(
-            '#type' => 'textfield',
-            '#title' => 'Shift Value',
-            '#description' => 'Enter a positive integer',
-            '#element_validate' => array('element_validate_integer_positive'),
-            '#attributes' => array('placeholder' => array('Leave blank to assign a random shift value')),
-        );
+        '#type' => 'textfield',
+        '#title' => 'Shift Value',
+        '#description' => 'Enter a positive integer',
+        '#element_validate' => array('element_validate_integer_positive'),
+        '#attributes' => array('placeholder' => array('Leave blank to assign a random shift value')),
+    );
     $form['direction'] = array(
-            '#type' => 'textfield',
-            '#title' => 'Shift Direction',
-            '#description' => "Specify 'left' or 'right'",
-            '#element_validate' => array('direction_validate'),
-            '#attributes' => array('placeholder' => array('Leave blank to assign a random shift direction')),
-        );
+        '#type' => 'textfield',
+        '#title' => 'Shift Direction',
+        '#description' => "Specify 'left' or 'right'",
+        '#element_validate' => array('direction_validate'),
+        '#attributes' => array('placeholder' => array('Leave blank to assign a random shift direction')),
+    );
     $form['phrase'] = array(
-            '#type' => 'textfield',
-            '#title' => 'Phrase',
-            '#description' => 'Enter the phrase you would like to encrypt<br>* Use only letters and approved punctuation: . , ! ? : ; \' "',
-            '#element_validate' => array('phrase_validate'),
-            '#required' => TRUE,
-        );
+        '#type' => 'textfield',
+        '#title' => 'Phrase',
+        '#description' => 'Enter the phrase you would like to encrypt<br>* Use only letters and approved punctuation: . , ! ? : ; \' "',
+        '#element_validate' => array('phrase_validate'),
+        '#required' => TRUE,
+    );
     $form['submit'] = array(
-            '#type' => 'submit',
-            '#value' => 'Encrypt Phrase',
-        );
+        '#type' => 'submit',
+        '#value' => 'Encrypt Phrase',
+    );
     return $form;
 }
 
+
+function encrypt_form_submit($form, &$form_state) {
+    // if there is no shift value, get one randomly
+    $value = $form_state['values']['value'];
+    if (!$value) {
+        $value = rand(1, 25);
+    }
+    // if there is no direction, get one randomly
+    $direction = $form_state['values']['direction'];
+    if (!$direction) {
+        if (rand(0, 1)) {
+            $direction = 'left';
+        } else {
+            $direction = 'right';
+        }
+    }
+    $phrase = $form_state['values']['phrase'];
+    $encrypted_phrase = encrypt_phrase($value, $direction, $phrase);
+    $_SESSION['value'] = $value;
+    $_SESSION['direction'] = $direction;
+    $_SESSION['phrase'] = $phrase;
+    $_SESSION['encrypted phrase'] = $encrypted_phrase;
+    $form_state['redirect'] = 'encrypt_success';
+}
+
+// validation functions
 function phrase_validate($element) {
     $phrase = $element['#value'];
     // find how many characters match the regular expression
@@ -96,28 +111,34 @@ function direction_validate($element) {
     }
 }
 
-function encrypt_form_submit($form, &$form_state) {
-    // if there is no value, get one randomly
-    $value = $form_state['values']['value'];
-    if (!$value) {
-        $value = rand(1, 25);
-    }
-    // if there is no direction, get one randomly
-    $direction = $form_state['values']['direction'];
-    if (!$direction) {
-        if (rand(0, 1)) {
-            $direction = 'left';
-        } else {
-            $direction = 'right';
-        }
-    }
-    $phrase = $form_state['values']['phrase'];
+// page templates
+function decrypt() {
+    $value = $_SESSION['value'];
+    $direction = $_SESSION['direction'];
+    $phrase = $_SESSION['phrase'];
+    $encrypted_phrase = $_SESSION['encrypted phrase'];
+    $decrypt_button = drupal_get_form('decrypt_button_form');
+    return "
+        <p>Original Phrase: $phrase</p>
+        <p>Shift Value: $value</p>
+        <p>Shift Direction: $direction</p>
+        <p>Encrypted Phrase: $encrypted_phrase</p>
+    ";
+}
+
+function encrypt_success() {
+    $encrypted_phrase = $_SESSION['encrypted phrase'];
+    $decrypt_button = drupal_get_form('decrypt_button_form');
+    return $encrypted_phrase . drupal_render($decrypt_button);
+}
+
+// encryption logic
+function encrypt_phrase($value, $direction, $phrase) {
     $encrypted_chars = array();
     $phrase_chars = str_split($phrase);
-
     // if it loops through the alphabet more than once, cut off the extra
     $modded_value = $value % 26;
-
+    // foreach adjusts characters individually
     foreach($phrase_chars as $char) {
         $char_code = ord($char);
         // define upper and lower ascii bounds based on whether a character is uppercase or lowercase
@@ -150,28 +171,5 @@ function encrypt_form_submit($form, &$form_state) {
         // add the new character to the array
         $encrypted_chars[] = chr($new_code);
     }
-    $_SESSION['value'] = $value;
-    $_SESSION['direction'] = $direction;
-    $_SESSION['phrase'] = $phrase;
-    $_SESSION['encrypted phrase'] = implode($encrypted_chars);
-    $form_state['redirect'] = 'encrypt_success';
-}
-
-function encrypt_success() {
-    $encrypted_phrase = $_SESSION['encrypted phrase'];
-    $decrypt_button = drupal_get_form('decrypt_button_form');
-    return $encrypted_phrase . drupal_render($decrypt_button);
-}
-
-function decrypt_button_form() {
-    $form = array();
-    $form['submit'] = array(
-            '#type' => 'submit',
-            '#value' => 'Decrypt This Phrase',
-        );
-    return $form;
-}
-
-function decrypt_button_form_submit($form, &$form_state) {
-    $form_state['redirect'] = 'decrypt';
+    return implode($encrypted_chars);
 }
