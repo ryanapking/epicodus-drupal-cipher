@@ -36,7 +36,7 @@ function encrypt_form() {
     $form['phrase'] = array(
             '#type' => 'textfield',
             '#title' => 'Phrase',
-            '#description' => 'Enter the phrase you would like to encrypt',
+            '#description' => 'Enter the phrase you would like to encrypt<br>* Use only letters and approved punctuation: . , ! ? : ; \' "',
             '#element_validate' => array('phrase_validate'),
             '#required' => TRUE,
         );
@@ -48,7 +48,11 @@ function encrypt_form() {
 }
 
 function phrase_validate($element) {
-    
+    $phrase = $element['#value'];
+    $matching_characters = preg_match_all('/[a-zA-Z ,.!?:;\'\"]/', $phrase);
+    if ($matching_characters != strlen($phrase)) {
+        form_error($element, t("Your phrase includes unallowed characters."));
+    }
 }
 
 function direction_validate($element) {
