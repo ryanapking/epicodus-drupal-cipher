@@ -142,7 +142,7 @@ function encrypt_phrase($value, $direction, $phrase) {
     foreach($phrase_chars as $char) {
         $char_code = ord($char);
         // define upper and lower ascii bounds based on whether a character is uppercase or lowercase
-        // if character is neither, add to the encrypted array and continue to the next iteration of the foreach loop
+        // if character is not a letter, add to the encrypted array and continue to the next iteration of the foreach loop
         $code_min;
         $code_max;
         if ($char_code >= 65 && $char_code <= 90) {
