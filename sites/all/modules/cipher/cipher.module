@@ -8,13 +8,33 @@ function cipher_menu() {
             'page callback' => 'drupal_get_form',
             'page arguments' => array('encrypt_form'),
         );
-        $items['encrypt_success'] = array(
-                'title' => 'Your Encrypted Phrase',
-                'type' => MENU_CALLBACK,
-                'access callback' => true,
-                'page callback' => 'encrypt_success',
-            );
+    $items['encrypt_success'] = array(
+            'title' => 'Your Encrypted Phrase',
+            'type' => MENU_CALLBACK,
+            'access callback' => true,
+            'page callback' => 'encrypt_success',
+        );
+    $items['decrypt'] = array(
+            'title' => 'Original Phrase Details',
+            'type' => MENU_CALLBACK,
+            'access callback' => TRUE,
+            'page callback' => 'decrypt',
+        );
     return $items;
+}
+
+function decrypt() {
+    $value = $_SESSION['value'];
+    $direction = $_SESSION['direction'];
+    $phrase = $_SESSION['phrase'];
+    $encrypted_phrase = $_SESSION['encrypted phrase'];
+    $decrypt_button = drupal_get_form('decrypt_button_form');
+    return "
+        <p>Original Phrase: $phrase</p>
+        <p>Shift Value: $value</p>
+        <p>Shift Direction: $direction</p>
+        <p>Encrypted Phrase: $encrypted_phrase</p>
+    ";
 }
 
 function cipher_node_info() {
@@ -138,9 +158,20 @@ function encrypt_form_submit($form, &$form_state) {
 }
 
 function encrypt_success() {
-    $value = $_SESSION['value'];
-    $direction = $_SESSION['direction'];
-    $phrase = $_SESSION['phrase'];
     $encrypted_phrase = $_SESSION['encrypted phrase'];
-    return "Encrypted Phrase: $encrypted_phrase <br>Value: $value <br>Direction: $direction <br>Phrase: $phrase";
+    $decrypt_button = drupal_get_form('decrypt_button_form');
+    return $encrypted_phrase . drupal_render($decrypt_button);
+}
+
+function decrypt_button_form() {
+    $form = array();
+    $form['submit'] = array(
+            '#type' => 'submit',
+            '#value' => 'Decrypt This Phrase',
+        );
+    return $form;
+}
+
+function decrypt_button_form_submit($form, &$form_state) {
+    $form_state['redirect'] = 'decrypt';
 }
