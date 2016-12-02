@@ -49,6 +49,7 @@ function encrypt_form() {
 
 function phrase_validate($element) {
     $phrase = $element['#value'];
+    // find how many characters match the regular expression
     $matching_characters = preg_match_all('/[a-zA-Z ,.!?:;\'\"]/', $phrase);
     if ($matching_characters != strlen($phrase)) {
         form_error($element, t("Your phrase includes unallowed characters."));
@@ -64,6 +65,48 @@ function direction_validate($element) {
 }
 
 function encrypt_form_submit($form, &$form_state) {
+    $value = $form_state['values']['value'];
+    $direction = $form_state['values']['direction'];
+    $phrase = $form_state['values']['phrase'];
+    $encrypted_chars = array();
+    $phrase_chars = str_split($phrase);
+
+    // if it loops through the alphabet more than once, cut off the extra
+    $modded_value = $value % 26;
+
+    foreach($phrase_chars as $char) {
+        $char_code = ord($char);
+        // if character is an uppercase letter
+        if ($char_code >= 65 && $char_code <= 90) {
+            $new_code;
+            // adjust character code left or right
+            if ($direction == 'left') {
+                $new_code = $char_code - $modded_value;
+            } else {
+                $new_code = $char_code + $modded_value;
+            }
+            // correct for overadjustments
+            if ($new_code > 90) {
+                $new_code = 64 + ($new_code - 90);
+            } elseif ($new_code < 65) {
+                $new_code = 91 - (65 - $new_code);
+            }
+            // add the new character to the array
+            $encrypted_chars[] = chr($new_code);
+        } elseif ($char_code >= 97 && $char_code <= 122) {
+            // character is a lowercase letter
+            $encrypted_chars[] = chr($char_code + $modded_value);
+        } else {
+            $encrypted_chars[] = chr($char_code);
+        }
+    }
+
+    echo "<pre>";
+    echo "$phrase <br>";
+    echo implode($encrypted_chars);
+    echo "</pre>";
+    exit;
+
     $_SESSION['value'] = $form_state['values']['value'];
     $_SESSION['direction'] = $form_state['values']['direction'];
     $_SESSION['phrase'] = $form_state['values']['phrase'];
