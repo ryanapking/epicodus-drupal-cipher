@@ -8,6 +8,12 @@ function cipher_menu() {
             'page callback' => 'drupal_get_form',
             'page arguments' => array('encrypt_form'),
         );
+        $items['encrypt_success'] = array(
+                'title' => 'Your Encrypted Phrase',
+                'type' => MENU_CALLBACK,
+                'access callback' => true,
+                'page callback' => 'encrypt_success',
+            );
     return $items;
 }
 
@@ -16,21 +22,53 @@ function encrypt_form() {
     $form['value'] = array(
             '#type' => 'textfield',
             '#title' => 'Shift Value',
-            '#description' => 'Enter a positive or negative integer',
+            '#description' => 'Enter a positive integer',
+            '#element_validate' => array('element_validate_integer_positive'),
+            '#required' => TRUE,
         );
     $form['direction'] = array(
             '#type' => 'textfield',
             '#title' => 'Shift Direction',
-            '#description' => 'Specify left or right',
+            '#description' => "Specify 'left' or 'right'",
+            '#element_validate' => array('direction_validate'),
+            '#required' => TRUE,
         );
     $form['phrase'] = array(
             '#type' => 'textfield',
             '#title' => 'Phrase',
             '#description' => 'Enter the phrase you would like to encrypt',
+            '#element_validate' => array('phrase_validate'),
+            '#required' => TRUE,
         );
     $form['submit'] = array(
             '#type' => 'submit',
             '#value' => 'Encrypt Phrase',
         );
     return $form;
+}
+
+function phrase_validate($element) {
+    
+}
+
+function direction_validate($element) {
+    $direction = $element['#value'];
+    $valid_directions = array('left', 'right');
+    if (!in_array($direction, $valid_directions)) {
+        form_error($element, t("Shift Direction invalid. Please enter 'left' or 'right'"));
+    }
+}
+
+function encrypt_form_submit($form, &$form_state) {
+    $_SESSION['value'] = $form_state['values']['value'];
+    $_SESSION['direction'] = $form_state['values']['direction'];
+    $_SESSION['phrase'] = $form_state['values']['phrase'];
+    $form_state['redirect'] = 'encrypt_success';
+}
+
+function encrypt_success() {
+    $value = $_SESSION['value'];
+    $direction = $_SESSION['direction'];
+    $phrase = $_SESSION['phrase'];
+    return "Value: $value <br>Direction: $direction <br>Phrase: $phrase";
 }
