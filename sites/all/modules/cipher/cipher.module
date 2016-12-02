@@ -17,6 +17,18 @@ function cipher_menu() {
     return $items;
 }
 
+function cipher_node_info() {
+    $nodes = array();
+    $nodes['encrypted_phrase'] = array(
+            'name' => 'Encrypted Phrase',
+            'base' => 'encrypted_phrase',
+            'description' => 'A phrase that has been encrypted',
+            'has_title' => TRUE,
+            'title_label' => t('Phrase Title'),
+        );
+    return $nodes;
+}
+
 function encrypt_form() {
     $form = array();
     $form['value'] = array(
@@ -24,14 +36,14 @@ function encrypt_form() {
             '#title' => 'Shift Value',
             '#description' => 'Enter a positive integer',
             '#element_validate' => array('element_validate_integer_positive'),
-            '#required' => TRUE,
+            '#attributes' => array('placeholder' => array('Leave blank to assign a random shift value')),
         );
     $form['direction'] = array(
             '#type' => 'textfield',
             '#title' => 'Shift Direction',
             '#description' => "Specify 'left' or 'right'",
             '#element_validate' => array('direction_validate'),
-            '#required' => TRUE,
+            '#attributes' => array('placeholder' => array('Leave blank to assign a random shift direction')),
         );
     $form['phrase'] = array(
             '#type' => 'textfield',
@@ -58,15 +70,27 @@ function phrase_validate($element) {
 
 function direction_validate($element) {
     $direction = $element['#value'];
-    $valid_directions = array('left', 'right');
+    $valid_directions = array('left', 'right', '');
     if (!in_array($direction, $valid_directions)) {
         form_error($element, t("Shift Direction invalid. Please enter 'left' or 'right'"));
     }
 }
 
 function encrypt_form_submit($form, &$form_state) {
+    // if there is no value, get one randomly
     $value = $form_state['values']['value'];
+    if (!$value) {
+        $value = rand(1, 25);
+    }
+    // if there is no direction, get one randomly
     $direction = $form_state['values']['direction'];
+    if (!$direction) {
+        if (rand(0, 1)) {
+            $direction = 'left';
+        } else {
+            $direction = 'right';
+        }
+    }
     $phrase = $form_state['values']['phrase'];
     $encrypted_chars = array();
     $phrase_chars = str_split($phrase);
@@ -106,9 +130,9 @@ function encrypt_form_submit($form, &$form_state) {
         // add the new character to the array
         $encrypted_chars[] = chr($new_code);
     }
-    $_SESSION['value'] = $form_state['values']['value'];
-    $_SESSION['direction'] = $form_state['values']['direction'];
-    $_SESSION['phrase'] = $form_state['values']['phrase'];
+    $_SESSION['value'] = $value;
+    $_SESSION['direction'] = $direction;
+    $_SESSION['phrase'] = $phrase;
     $_SESSION['encrypted phrase'] = implode($encrypted_chars);
     $form_state['redirect'] = 'encrypt_success';
 }
