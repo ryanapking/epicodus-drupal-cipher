@@ -85,10 +85,6 @@ function encrypt_form_submit($form, &$form_state) {
     }
     $phrase = $form_state['values']['phrase'];
     $encrypted_phrase = encrypt_phrase($value, $direction, $phrase);
-    // echo "<pre>";
-    // var_dump($phrase);
-    // echo "</pre>";
-    // exit;
     $_SESSION['value'] = $value;
     $_SESSION['direction'] = $direction;
     $_SESSION['phrase'] = $phrase;
@@ -130,10 +126,6 @@ function decrypt() {
 }
 
 function encrypt_success() {
-    // echo "<pre>";
-    // var_dump($_SESSION['encrypted phrase']);
-    // echo "</pre>";
-    // exit;
     $encrypted_phrase = $_SESSION['encrypted phrase'];
     $decrypt_button = drupal_get_form('decrypt_button_form');
     return $encrypted_phrase . drupal_render($decrypt_button);
@@ -181,10 +173,5 @@ function encrypt_phrase($value, $direction, $phrase) {
         $encrypted_chars[] = chr($new_code);
     }
     $encrypted_phrase = implode($encrypted_chars);
-    // echo "<pre>";
-    // var_dump($encrypted_chars);
-    // var_dump($encrypted_phrase);
-    // echo "</pre>";
-    // exit;
     return implode($encrypted_chars);
 }
