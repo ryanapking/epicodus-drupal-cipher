@@ -140,19 +140,18 @@ function encrypt_phrase($value, $direction, $phrase) {
     // foreach adjusts characters individually
     foreach($phrase_chars as $char) {
         $char_code = ord($char);
-        // define min and max ascii bounds based on whether a character is uppercase or lowercase
-        // if character is not a letter, add to the encrypted array and continue to the next iteration of the foreach loop
-        $code_min;
-        $code_max;
+        // set the bounds of the lowercase ascii alphabet
+        $code_min = 97;
+        $code_max = 122;
+        // if a character is uppercase, convert it to lowercase
         if ($char_code >= 65 && $char_code <= 90) {
-            $code_min = 65;
-            $code_max = 90;
-        } elseif ($char_code >= 97 && $char_code <= 122) {
-            $code_min = 97;
-            $code_max = 122;
-        } else {
+            $char_code += 32;
+        }
+        // if character is not a letter, add to the encrypted array and continue to the next iteration of the foreach loop
+        if ($char_code < 97 || $char_code > 122) {
             $encrypted_chars[] = $char;
             continue;
+        } else {
         }
         // adjust character code left or right
         $new_code;
