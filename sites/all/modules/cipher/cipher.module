@@ -85,6 +85,10 @@ function encrypt_form_submit($form, &$form_state) {
     }
     $phrase = $form_state['values']['phrase'];
     $encrypted_phrase = encrypt_phrase($value, $direction, $phrase);
+    // echo "<pre>";
+    // var_dump($phrase);
+    // echo "</pre>";
+    // exit;
     $_SESSION['value'] = $value;
     $_SESSION['direction'] = $direction;
     $_SESSION['phrase'] = $phrase;
@@ -126,6 +130,10 @@ function decrypt() {
 }
 
 function encrypt_success() {
+    // echo "<pre>";
+    // var_dump($_SESSION['encrypted phrase']);
+    // echo "</pre>";
+    // exit;
     $encrypted_phrase = $_SESSION['encrypted phrase'];
     $decrypt_button = drupal_get_form('decrypt_button_form');
     return $encrypted_phrase . drupal_render($decrypt_button);
@@ -147,11 +155,14 @@ function encrypt_phrase($value, $direction, $phrase) {
         if ($char_code >= 65 && $char_code <= 90) {
             $char_code += 32;
         }
-        // if character is not a letter, add to the encrypted array and continue to the next iteration of the foreach loop
-        if ($char_code < 97 || $char_code > 122) {
+        // if character is a space, replace with &nbsp character that will properly display in html
+        // if character is not a letter, add it to the encrypted array and continue to the next iteration of the foreach loop
+        if ($char_code == 32) {
+            $encrypted_chars[] = '&nbsp;';
+            continue;
+        } elseif ($char_code < 97 || $char_code > 122) {
             $encrypted_chars[] = $char;
             continue;
-        } else {
         }
         // adjust character code left or right
         $new_code;
@@ -169,5 +180,11 @@ function encrypt_phrase($value, $direction, $phrase) {
         // add the new character to the array
         $encrypted_chars[] = chr($new_code);
     }
+    $encrypted_phrase = implode($encrypted_chars);
+    // echo "<pre>";
+    // var_dump($encrypted_chars);
+    // var_dump($encrypted_phrase);
+    // echo "</pre>";
+    // exit;
     return implode($encrypted_chars);
 }
